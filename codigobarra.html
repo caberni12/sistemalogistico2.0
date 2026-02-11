@@ -2,262 +2,216 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Sistema Profesional de Etiquetas</title>
+<title>Sistema de Etiquetas PRO INTEGRAL (SCAN FEEDBACK)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- ================= LIBRERÍAS ================= -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
 :root{
-  --w:80mm;
-  --h:50mm;
-  --bg:#f8fafc;
-  --panel:#ffffff;
-  --text:#0f172a;
-  --border:#e2e8f0;
-  --primary:#14b8a6;
-  --primary-dark:#0d9488;
+ --w:80mm;
+ --h:50mm;
+ --paper-bg:#fff;
 }
+*{box-sizing:border-box;font-family:Arial}
+body{margin:0;background:#f8fafc;color:#0f172a}
+.wrap{display:grid;grid-template-columns:380px 1fr;gap:20px;padding:20px}
+.card{background:#fff;border-radius:14px;padding:20px;border:1px solid #e2e8f0}
+h3{margin-top:0}
 
-/* BASE */
-*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
-body{margin:0;background:var(--bg);color:var(--text)}
-
-/* LAYOUT */
-.wrap{
-  display:grid;
-  grid-template-columns:380px 1fr;
-  gap:20px;
-  padding:20px;
-}
-.card{
-  background:var(--panel);
-  border-radius:14px;
-  padding:20px;
-  border:1px solid var(--border);
-}
-h2,h3{margin-top:0}
-
-/* FORM */
-label{display:block;margin-top:10px;font-size:13px}
 input,select,button{
-  width:100%;padding:12px;margin-top:6px;
-  border-radius:10px;border:1px solid var(--border);
-  font-size:14px
+ width:100%;padding:10px;margin-top:8px;
+ border-radius:10px;border:1px solid #e2e8f0
 }
-button{
-  background:var(--primary);
-  color:#fff;
-  font-weight:700;
-  border:none;
-  cursor:pointer
-}
-button:hover{background:var(--primary-dark)}
+button{background:#14b8a6;color:#fff;font-weight:700;border:none}
 .secondary{background:#64748b}
-.secondary:hover{background:#475569}
 
-/* PROGRESS */
-.progress{
-  width:100%;height:10px;background:#e5e7eb;
-  border-radius:6px;overflow:hidden;display:none;margin-top:8px
-}
-.progress span{
-  display:block;height:100%;width:0%;
-  background:linear-gradient(90deg,#14b8a6,#22d3ee)
-}
+/* VISUAL */
+.progress{height:8px;background:#e5e7eb;border-radius:6px;overflow:hidden;margin-top:8px}
+.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#14b8a6,#22d3ee)}
+.semaforo{display:flex;gap:8px;margin-top:10px}
+.luz{width:14px;height:14px;border-radius:50%;background:#cbd5e1}
+.luz.rojo.on{background:#ef4444}
+.luz.amarillo.on{background:#facc15}
+.luz.verde.on{background:#22c55e}
 
 /* BUSCADOR */
-.results{
-  background:#fff;border:1px solid var(--border);
-  border-radius:8px;max-height:160px;overflow:auto
-}
+.results{border:1px solid #e2e8f0;border-radius:10px;margin-top:6px}
 .result{padding:6px;cursor:pointer}
-.result:hover{background:#f1f5f9}
+.result:hover{background:#e5e7eb}
 
-/* SEMÁFORO */
-.semaforo{display:flex;gap:10px;margin:10px 0}
-.luz{width:14px;height:14px;border-radius:50%;background:#cbd5e1}
-.luz.rojo.activo{background:#ef4444}
-.luz.amarillo.activo{background:#facc15}
-.luz.verde.activo{background:#22c55e}
-.estado{font-size:13px}
+/* SCANNER */
+#scanner{display:none;margin-top:10px;background:#000;border-radius:14px;overflow:hidden}
 
-/* PREAGREGADAS */
-.prelist{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-  gap:14px
-}
-.precard{
-  background:#fff;border:1px solid var(--border);
-  border-radius:14px;padding:14px;
-  box-shadow:0 6px 18px rgba(0,0,0,.1)
-}
-.precard h4{text-align:center;margin:0}
-.total{text-align:center;font-size:26px;font-weight:900;color:var(--primary)}
-.desc{text-align:center;font-size:13px}
-.actions{display:flex;gap:8px;margin-top:10px}
-.actions button{flex:1;padding:8px;font-size:13px}
-.total-global{text-align:center;font-size:18px;font-weight:900;margin-top:12px}
+/* LISTA */
+.lista{margin-top:10px}
+.item{display:flex;justify-content:space-between;align-items:center;
+ background:#f1f5f9;padding:6px 10px;border-radius:8px;margin-bottom:6px;font-size:13px}
+.item button{width:auto;padding:4px 8px;background:#ef4444}
 
 /* ETIQUETAS */
-#preview{background:#fff}
+.sheet{display:flex;flex-wrap:wrap;gap:4mm;padding:4mm;background:var(--paper-bg)}
 .label{
-  width:var(--w);
-  height:var(--h);
-  padding:4mm;
-  page-break-after:always;
+ width:var(--w);
+ height:var(--h);
+ background:#fff;
+ color:#000;
+ padding:4mm;
+ page-break-inside:avoid;
+ display:flex;
+ flex-direction:column;
+ align-items:center;
 }
-.codigo{text-align:center;font-size:22px;font-weight:900}
-.descripcion{text-align:center;font-size:14px;font-weight:700}
-.unidades{text-align:center;font-size:16px;font-weight:900;margin-top:2mm}
-
-/* QR / BARRA CENTRADO */
+.codigo{text-align:center;font-size:20px;font-weight:900}
+.descripcion{text-align:center;font-size:13px;font-weight:700}
+.unidades{text-align:center;font-size:14px;font-weight:900}
 .code{
-  width:100%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  margin:3mm 0;
+ width:100%;
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ margin:2mm 0;
 }
 .code canvas,
 .code svg{
-  display:block!important;
-  margin:0 auto!important;
+ display:block;
+ margin:0 auto;
 }
 
 /* MOBILE */
 @media(max-width:768px){
-  .wrap{grid-template-columns:1fr;padding:12px}
-  .card{border-radius:18px;box-shadow:0 10px 26px rgba(0,0,0,.18)}
-  .label{
-    width:100%!important;
-    height:auto!important;
-    border-radius:18px;
-    box-shadow:0 10px 26px rgba(0,0,0,.22);
-    margin-bottom:16px
-  }
+ .wrap{grid-template-columns:1fr}
+ .label{width:100%!important;height:auto!important;border-radius:18px}
 }
 
 /* PRINT */
 @page{margin:0}
 @media print{
-  *{box-shadow:none!important;border-radius:0!important}
-  body *{display:none!important}
-  #preview,#preview *{display:block!important}
-  #preview{position:absolute;left:0;top:0}
-  .label{
-    width:var(--w)!important;
-    height:var(--h)!important;
-    padding:4mm!important;
-    margin:0!important;
-  }
+ body *{display:none!important}
+ .sheet,.sheet *{display:block!important}
+ .sheet{position:absolute;inset:0}
+ .label{width:var(--w)!important;height:var(--h)!important}
 }
 </style>
 </head>
 
 <body>
 
+<audio id="beep">
+ <source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" type="audio/ogg">
+</audio>
+
 <div class="wrap">
 
-<!-- IMPORTADOR -->
 <div class="card">
-  <h2>Importar productos</h2>
-  <input type="file" id="file" accept=".xlsx">
-  <button onclick="importar()">Importar a Google Sheets</button>
-  <div class="progress" id="progress"><span></span></div>
-  <div id="info">Esperando archivo…</div>
+<h3>📂 Importar / Consultar</h3>
+<input type="file" id="file" accept=".xlsx">
+<button onclick="importarXLSX()">Importar XLSX</button>
+
+<input id="search" placeholder="Buscar código o descripción" oninput="buscar()">
+<div id="results" class="results"></div>
+
+<button class="secondary" onclick="abrirScanner()">📷 Escanear</button>
+<div id="scanner"></div>
+
+<div class="progress"><span id="bar"></span></div>
+
+<div class="semaforo">
+ <div class="luz rojo" id="lr"></div>
+ <div class="luz amarillo" id="la"></div>
+ <div class="luz verde" id="lv"></div>
+</div>
 </div>
 
-<!-- GENERADOR -->
 <div class="card">
-  <h3>Generador de etiquetas</h3>
+<h3>⚙️ Configuración</h3>
 
-  <div class="semaforo">
-    <div class="luz rojo" id="r"></div>
-    <div class="luz amarillo" id="a"></div>
-    <div class="luz verde" id="v"></div>
-  </div>
-  <div class="estado" id="estado">Sin etiquetas</div>
+<select id="paper" onchange="setPaper(this.value)">
+ <option value="termico">Papel térmico</option>
+ <option value="normal">Papel normal</option>
+</select>
 
-  <label>Buscar producto</label>
-  <input id="search" oninput="buscar()">
-  <div class="results" id="results"></div>
+<select onchange="setTemplate(this.value)">
+ <option value="">Tamaño personalizado</option>
+ <option value="50x30">50 x 30 mm</option>
+ <option value="80x50">80 x 50 mm</option>
+ <option value="100x70">100 x 70 mm</option>
+</select>
 
-  <label>Tipo código</label>
-  <select id="tipo">
-    <option value="QR">QR</option>
-    <option value="CODE128">CODE128</option>
-    <option value="CODE39">CODE39</option>
-  </select>
+<input id="w" type="number" value="80">
+<input id="h" type="number" value="50">
 
-  <label>Código</label><input id="codigo">
-  <label>Descripción</label><input id="descripcion">
-  <label>Unidades</label><input id="unidades" type="number" value="1">
-  <label>Cantidad etiquetas</label><input id="cant" type="number" value="1">
-  <label>Ancho etiqueta (mm)</label><input id="w" type="number" value="80">
-  <label>Alto etiqueta (mm)</label><input id="h" type="number" value="50">
+<select id="tipo">
+ <option value="QR">QR</option>
+ <option value="CODE128">CODE128</option>
+ <option value="CODE39">CODE39</option>
+</select>
 
-  <button class="secondary" onclick="preAgregar()">➕ Pre-agregar</button>
-  <button onclick="imprimir()">🖨️ Imprimir</button>
-</div>
+<input id="codigo" placeholder="Código">
+<input id="descripcion" placeholder="Descripción">
+<input id="unidades" value="1">
+<input id="cant" value="1">
 
-<!-- PREAGREGADAS -->
-<div class="card">
-  <h3>Etiquetas pre-agregadas</h3>
-  <div id="prelist" class="prelist"></div>
-  <div id="totalGlobal" class="total-global">Total: 0</div>
+<button onclick="preAgregar()">Agregar</button>
+
+<div class="lista" id="lista"></div>
+
+<button class="secondary" onclick="imprimir()">Imprimir</button>
 </div>
 
 </div>
 
-<div id="preview"></div>
+<div class="sheet" id="preview"></div>
 
 <script>
 const API="https://script.google.com/macros/s/AKfycbwOx6mRhIPWQLXXeH5s_Fsw3A6A_dZv-ATUxQpybSR5jsoaH34i8c62eIhipmNy--ug/exec";
-let productos=[],buffer=[];
-const bar=document.querySelector("#progress span");
-const progress=document.getElementById("progress");
+let productos=[],buffer=[],scanner=null;
 
-function setSemaforo(c,t){
- ["r","a","v"].forEach(i=>document.getElementById(i).classList.remove("activo"));
- if(c==="rojo")r.classList.add("activo");
- if(c==="amarillo")a.classList.add("activo");
- if(c==="verde")v.classList.add("activo");
- estado.textContent=t;
+/* UTIL */
+function sem(c){
+ ["lr","la","lv"].forEach(i=>document.getElementById(i).classList.remove("on"));
+ if(c==="rojo") lr.classList.add("on");
+ if(c==="amarillo") la.classList.add("on");
+ if(c==="verde") lv.classList.add("on");
 }
-setSemaforo("rojo","Sin etiquetas");
-
-function cargarBD(){
- fetch(API).then(r=>r.json()).then(d=>productos=d);
+function setPaper(v){
+ document.documentElement.style.setProperty("--paper-bg",v==="normal"?"#f8fafc":"#fff");
 }
-cargarBD();
+function setTemplate(v){
+ if(!v) return;
+ const [a,b]=v.split("x");
+ w.value=a;h.value=b;
+}
 
-/* IMPORTAR XLSX */
-file.onchange=()=>{
- const rd=new FileReader();
- progress.style.display="block";bar.style.width="0%";
- rd.onload=e=>{
+/* BD */
+fetch(API).then(r=>r.json()).then(d=>{
+ productos=d;
+ localStorage.setItem("productos",JSON.stringify(productos));
+}).catch(()=>{
+ const ls=localStorage.getItem("productos");
+ if(ls) productos=JSON.parse(ls);
+});
+
+function importarXLSX(){
+ const f=file.files[0];
+ if(!f) return;
+ sem("amarillo");
+ const reader=new FileReader();
+ reader.onload=e=>{
   const wb=XLSX.read(e.target.result,{type:"binary"});
-  productos=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-  bar.style.width="100%";
-  info.textContent="Productos detectados: "+productos.length;
-  setTimeout(()=>progress.style.display="none",500);
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  productos=XLSX.utils.sheet_to_json(ws);
+  localStorage.setItem("productos",JSON.stringify(productos));
+  const fd=new FormData();
+  fd.append("action","import");
+  fd.append("productos",JSON.stringify(productos));
+  fetch(API,{method:"POST",body:fd});
+  sem("verde");
  };
- rd.readAsBinaryString(file.files[0]);
-};
-
-function importar(){
- if(!productos.length)return;
- progress.style.display="block";bar.style.width="30%";
- const fd=new FormData();
- fd.append("action","import");
- fd.append("productos",JSON.stringify(productos));
- fetch(API,{method:"POST",body:fd})
-  .then(()=>{bar.style.width="100%";setTimeout(()=>progress.style.display="none",500);cargarBD();});
+ reader.readAsBinaryString(f);
 }
 
 /* BUSCAR */
@@ -265,59 +219,72 @@ function buscar(){
  const q=search.value.toLowerCase();
  if(!q){results.innerHTML="";return;}
  results.innerHTML=productos.filter(p=>
-  p.CODIGO?.toLowerCase().includes(q)||p.DESCRIPCION?.toLowerCase().includes(q)
+  p.CODIGO?.toLowerCase().includes(q)||
+  p.DESCRIPCION?.toLowerCase().includes(q)
  ).slice(0,6).map(p=>`
   <div class="result" onclick="seleccionar('${p.CODIGO}','${p.DESCRIPCION}','${p.UNIDADES||1}')">
    <b>${p.CODIGO}</b> – ${p.DESCRIPCION}
   </div>`).join("");
 }
 function seleccionar(c,d,u){
- codigo.value=c;descripcion.value=d;unidades.value=u;results.innerHTML="";
+ codigo.value=c;
+ descripcion.value=d;
+ unidades.value=u;
+ results.innerHTML="";
 }
 
-/* PREAGREGAR */
-function preAgregar(){
- buffer.push({codigo:codigo.value,descripcion:descripcion.value,unidades:unidades.value,tipo:tipo.value,cant:+cant.value,w:w.value,h:h.value});
- renderPre();setSemaforo("amarillo","Listo para imprimir");
-}
-
-function renderPre(){
- prelist.innerHTML="";let total=0,map={};
- buffer.forEach(b=>{
-  if(!map[b.codigo])map[b.codigo]={...b,total:0};
-  map[b.codigo].total+=b.cant;
-  total+=b.cant;
+/* SCANNER CON SONIDO + VIBRACIÓN */
+function abrirScanner(){
+ const box=document.getElementById("scanner");
+ box.style.display="block";
+ if(scanner) return;
+ scanner=new Html5Qrcode("scanner");
+ scanner.start({facingMode:"environment"},{fps:10,qrbox:250},txt=>{
+  document.getElementById("beep").play();
+  if(navigator.vibrate) navigator.vibrate(200);
+  search.value=txt;
+  buscar();
  });
- Object.values(map).forEach(b=>{
-  prelist.innerHTML+=`
-   <div class="precard">
-    <h4>${b.codigo}</h4>
-    <div class="total">${b.total}</div>
-    <div class="desc">${b.descripcion}</div>
-    <div class="actions">
-     <button onclick="editar('${b.codigo}')">✏️</button>
-     <button class="secondary" onclick="eliminar('${b.codigo}')">🗑️</button>
-    </div>
+}
+
+/* LISTA */
+function renderLista(){
+ lista.innerHTML="";
+ buffer.forEach((b,i)=>{
+  lista.innerHTML+=`
+   <div class="item">
+    <span>${b.codigo} (${b.cant})</span>
+    <button onclick="delItem(${i})">X</button>
    </div>`;
  });
- totalGlobal.textContent="Total: "+total;
+}
+function delItem(i){
+ buffer.splice(i,1);
+ renderLista();
 }
 
-function editar(c){
- const n=prompt("Nueva cantidad:");
- if(!n)return;
- buffer.forEach(b=>{if(b.codigo===c)b.cant=+n});
- renderPre();
-}
-function eliminar(c){
- buffer=buffer.filter(b=>b.codigo!==c);
- renderPre();
+/* AGREGAR */
+function preAgregar(){
+ sem("amarillo");
+ bar.style.width="40%";
+ buffer.push({
+  codigo:codigo.value,
+  descripcion:descripcion.value,
+  unidades:unidades.value,
+  cant:cant.value,
+  tipo:tipo.value,
+  w:w.value,
+  h:h.value
+ });
+ renderLista();
+ bar.style.width="100%";
+ sem("verde");
+ setTimeout(()=>bar.style.width="0%",500);
 }
 
 /* IMPRIMIR */
 function imprimir(){
- if(!buffer.length){setSemaforo("rojo","Sin etiquetas");return;}
- setSemaforo("verde","Imprimiendo…");
+ sem("rojo");
  preview.innerHTML="";
  buffer.forEach(b=>{
   document.documentElement.style.setProperty("--w",b.w+"mm");
@@ -331,20 +298,22 @@ function imprimir(){
     <div class="descripcion">${b.descripcion}</div>
     <div class="unidades">UND: ${b.unidades}</div>`;
    preview.appendChild(l);
-
    const c=l.querySelector(".code");
-   while(c.firstChild){c.removeChild(c.firstChild);} // 🔑 limpia SIEMPRE
-
    if(b.tipo==="QR"){
-    new QRCode(c,{text:String(b.codigo),width:90,height:90});
+    new QRCode(c,{text:b.codigo,width:80,height:80});
    }else{
     const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+    svg.setAttribute("width","100%");
+    svg.setAttribute("height","40");
     c.appendChild(svg);
-    JsBarcode(svg,String(b.codigo),{format:b.tipo,width:2,height:40,displayValue:false});
+    JsBarcode(svg,b.codigo,{format:b.tipo,width:2,height:35,displayValue:false,margin:0});
    }
   }
  });
- setTimeout(()=>{window.print();buffer=[];renderPre();setSemaforo("rojo","Impresión finalizada");},400);
+ window.print();
+ buffer=[];
+ renderLista();
+ sem("verde");
 }
 </script>
 
