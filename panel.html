@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Panel Administrativo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  font-family:'Segoe UI',Arial;
+  background:#f4f7fb;
+  margin:0;
+}
+
+.container{
+  padding:40px;
+  max-width:1300px;
+  margin:auto;
+}
+
+.card{
+  background:#fff;
+  border-radius:18px;
+  padding:30px;
+  box-shadow:0 15px 35px rgba(0,0,0,.08);
+}
+
+/* CONTROLES */
+.controls{
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+}
+
+.controls input{
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  min-width:260px;
+}
+
+button{
+  padding:10px 16px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:14px;
+}
+
+.btn-load{ background:#3b82f6; color:#fff; }
+.btn-success{ background:#10b981; color:#fff; }
+.btn-edit{ background:#6366f1; color:#fff; padding:6px 12px; }
+.btn-danger{ background:#ef4444; color:#fff; padding:6px 12px; }
+
+/* LOADER */
+.loader{
+  width:16px;
+  height:16px;
+  border:3px solid rgba(255,255,255,.5);
+  border-top:3px solid #fff;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+
+@keyframes spin{
+  to{ transform:rotate(360deg); }
+}
+
+.btn-loading{
+  pointer-events:none;
+  opacity:.8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+
+/* TABLA */
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th{
+  background:#f1f5f9;
+  padding:14px;
+}
+
+td{
+  padding:12px;
+  border-bottom:1px solid #eee;
+  text-align:center;
+  font-size:13px;
+}
+
+/* MODALES */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+}
+
+.modal-content{
+  background:#fff;
+  width:520px;
+  padding:30px;
+  border-radius:18px;
+}
+
+input,select{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+
+.permissions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:15px;
+}
+
+.footer-btns{
+  margin-top:20px;
+  text-align:right;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ELEMENTO USADO POR JS -->
+<span id="usuarioInfo" style="display:none;"></span>
+
+<div class="container">
+  <div class="card">
+
+    <!-- CONTROLES -->
+    <div class="controls">
+      <button id="btnLoad" class="btn-load" onclick="cargarUsuarios()">
+        <span>Cargar usuarios</span>
+      </button>
+
+      <input id="busqueda" placeholder="Buscar usuario, nombre o rol" oninput="filtrar()">
+
+      <button class="btn-success" onclick="abrirCrear()">+ Crear Usuario</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Contraseña</th>
+          <th>Nombre</th>
+          <th>Rol</th>
+          <th>Activo</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tablaUsuarios">
+        <tr><td colspan="6">Presione “Cargar usuarios”</td></tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+<!-- MODAL USUARIO -->
+<div class="modal" id="modalUsuario">
+  <div class="modal-content">
+    <h3 id="tituloUsuario"></h3>
+
+    <input id="u_user" placeholder="Usuario">
+    <input id="u_pass" placeholder="Contraseña">
+    <input id="u_nombre" placeholder="Nombre">
+
+    <select id="u_rol">
+      <option>ADMIN</option>
+      <option>OPERADOR</option>
+      <option>SUPERVISOR</option>
+    </select>
+
+    <select id="u_activo">
+      <option value="SI">ACTIVO</option>
+      <option value="NO">INACTIVO</option>
+    </select>
+
+    <h4>Permisos</h4>
+    <div class="permissions">
+      <label><input type="checkbox" value="inventario"> Inventario</label>
+      <label><input type="checkbox" value="etiquetas"> Etiquetas</label>
+      <label><input type="checkbox" value="codigos"> Códigos</label>
+      <label><input type="checkbox" value="dashboard"> Dashboard</label>
+      <label><input type="checkbox" value="usuarios"> Usuarios</label>
+    </div>
+
+    <div class="footer-btns">
+      <button id="btnGuardar" class="btn-success" onclick="guardarUsuario()">Guardar</button>
+      <button class="btn-danger" onclick="cerrarUsuario()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= CONFIG ================= */
+const API = "https://script.google.com/macros/s/AKfycbzhpjRngwZW2z4d49pUuHtEci23KFxZkETu-SvB5OPPDJpXnqOkc_MchNE-nWYPfAzw/exec";
+let usuarios = [];
+let modo = "crear";
+
+/* ================= SESION ================= */
+async function verificarSesion(){
+  const token = localStorage.getItem("token");
+  const ip = localStorage.getItem("ip");
+
+  if(!token) location.href="login.html";
+
+  const r = await fetch(API+"?action=verify&token="+token+"&ip="+ip);
+  const d = await r.json();
+
+  if(!d.valid || d.rol !== "ADMIN"){
+    localStorage.clear();
+    location.href="login.html";
+  }
+}
+verificarSesion();
+
+/* ================= CARGAR ================= */
+async function cargarUsuarios(){
+
+  const btn = document.getElementById("btnLoad");
+  btn.classList.add("btn-loading");
+  btn.innerHTML = `<div class="loader"></div> Cargando...`;
+
+  tablaUsuarios.innerHTML = `<tr><td colspan="6">Cargando...</td></tr>`;
+
+  try{
+    const r = await fetch(API+"?action=listarUsuarios");
+    const d = await r.json();
+    usuarios = d.data || [];
+    renderTabla(usuarios);
+  }catch{
+    tablaUsuarios.innerHTML = `<tr><td colspan="6">Error al cargar</td></tr>`;
+  }
+
+  btn.classList.remove("btn-loading");
+  btn.innerHTML = `<span>Cargar usuarios</span>`;
+}
+
+/* ================= TABLA ================= */
+function renderTabla(data){
+  tablaUsuarios.innerHTML = "";
+
+  if(data.length === 0){
+    tablaUsuarios.innerHTML = `<tr><td colspan="6">Sin resultados</td></tr>`;
+    return;
+  }
+
+  data.forEach(u=>{
+    tablaUsuarios.innerHTML += `
+      <tr>
+        <td>${u[1]}</td>
+        <td>${u[2]}</td>
+        <td>${u[3]}</td>
+        <td>${u[4]}</td>
+        <td>${u[5]}</td>
+        <td>
+          <button class="btn-edit"
+            onclick="editarUsuario('${u[1]}','${u[2]}','${u[3]}','${u[4]}','${u[5]}','${u[10]||""}')">
+            Editar
+          </button>
+          <button class="btn-danger" onclick="eliminarUsuario('${u[1]}')">
+            Eliminar
+          </button>
+        </td>
+      </tr>`;
+  });
+}
+
+/* ================= FILTRO ================= */
+function filtrar(){
+  const q = busqueda.value.toLowerCase();
+  renderTabla(
+    usuarios.filter(u =>
+      u[1].toLowerCase().includes(q) ||
+      u[3].toLowerCase().includes(q) ||
+      u[4].toLowerCase().includes(q)
+    )
+  );
+}
+
+/* ================= MODAL ================= */
+function abrirCrear(){
+  modo="crear";
+  tituloUsuario.innerText="Crear Usuario";
+  limpiarFormulario();
+  u_user.disabled=false;
+  modalUsuario.style.display="flex";
+}
+
+function editarUsuario(usuario,pass,nombre,rol,activo,permisos){
+  modo="editar";
+  tituloUsuario.innerText="Editar Usuario";
+
+  u_user.value = usuario;
+  u_user.disabled = true;
+  u_pass.value = pass;
+  u_nombre.value = nombre;
+  u_rol.value = rol;
+  u_activo.value = activo;
+
+  document.querySelectorAll(".permissions input")
+    .forEach(c=>c.checked = permisos.includes(c.value));
+
+  modalUsuario.style.display="flex";
+}
+
+function cerrarUsuario(){
+  modalUsuario.style.display="none";
+}
+
+function limpiarFormulario(){
+  u_user.value="";
+  u_pass.value="";
+  u_nombre.value="";
+  u_rol.value="ADMIN";
+  u_activo.value="SI";
+  document.querySelectorAll(".permissions input").forEach(c=>c.checked=false);
+}
+
+/* ================= GUARDAR ================= */
+async function guardarUsuario(){
+
+  const btn = document.getElementById("btnGuardar");
+  btn.classList.add("btn-loading");
+  btn.innerHTML = `<div class="loader"></div> Guardando...`;
+
+  const permisos = [...document.querySelectorAll(".permissions input:checked")]
+    .map(c=>c.value).join(",");
+
+  try{
+    await fetch(API,{
+      method:"POST",
+      headers:{ "Content-Type":"text/plain" },
+      body:JSON.stringify({
+        action: modo==="crear" ? "crearUsuario" : "editarUsuario",
+        username:u_user.value,
+        password:u_pass.value,
+        nombre:u_nombre.value,
+        rol:u_rol.value,
+        activo:u_activo.value,
+        permisos:permisos
+      })
+    });
+
+    cerrarUsuario();
+    cargarUsuarios();
+
+  }finally{
+    btn.classList.remove("btn-loading");
+    btn.innerHTML = `Guardar`;
+  }
+}
+
+/* ================= ELIMINAR ================= */
+async function eliminarUsuario(usuario){
+
+  if(!confirm("¿Eliminar usuario "+usuario+"?")) return;
+
+  await fetch(API,{
+    method:"POST",
+    headers:{ "Content-Type":"text/plain" },
+    body:JSON.stringify({
+      action:"eliminarUsuario",
+      username:usuario
+    })
+  });
+
+  cargarUsuarios();
+}
+</script>
+
+<!-- SEGURIDAD -->
+<script src="segurity.js"></script>
+
+</body>
+</html>
