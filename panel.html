@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
+/* ================= BASE ================= */
 body{
   font-family:'Segoe UI',Arial;
   background:#f4f7fb;
@@ -25,7 +26,7 @@ body{
   box-shadow:0 15px 35px rgba(0,0,0,.08);
 }
 
-/* CONTROLES */
+/* ================= CONTROLES ================= */
 .controls{
   display:flex;
   gap:10px;
@@ -53,7 +54,7 @@ button{
 .btn-edit{ background:#6366f1; color:#fff; padding:6px 12px; }
 .btn-danger{ background:#ef4444; color:#fff; padding:6px 12px; }
 
-/* LOADER */
+/* ================= LOADER ================= */
 .loader{
   width:16px;
   height:16px;
@@ -63,9 +64,7 @@ button{
   animation:spin .7s linear infinite;
 }
 
-@keyframes spin{
-  to{ transform:rotate(360deg); }
-}
+@keyframes spin{ to{ transform:rotate(360deg); } }
 
 .btn-loading{
   pointer-events:none;
@@ -76,7 +75,7 @@ button{
   gap:8px;
 }
 
-/* TABLA */
+/* ================= TABLA (ESCRITORIO) ================= */
 table{
   width:100%;
   border-collapse:collapse;
@@ -94,7 +93,7 @@ td{
   font-size:13px;
 }
 
-/* MODALES */
+/* ================= MODALES ================= */
 .modal{
   position:fixed;
   inset:0;
@@ -131,263 +130,262 @@ input,select{
   margin-top:20px;
   text-align:right;
 }
+
+/* ================= MOBILE CARDS ================= */
+/* 🔒 OCULTAS POR DEFECTO (ESCRITORIO) */
+.mobile-list{
+  display:none;
+}
+
+/* 📱 SOLO MÓVIL */
+@media (max-width:768px){
+
+  table, thead{
+    display:none;
+  }
+
+  .mobile-list{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+
+  .mobile-card{
+    background:#fff;
+    border-radius:16px;
+    padding:18px;
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+    border:1px solid #e5e7eb;
+  }
+
+  .mobile-card h4{
+    margin:0 0 6px;
+    font-size:15px;
+  }
+
+  .mobile-card p{
+    margin:4px 0;
+    font-size:13px;
+    color:#475569;
+  }
+
+  .mobile-actions{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  }
+
+  .mobile-actions button{
+    flex:1;
+  }
+}
 </style>
 </head>
 
 <body>
 
-<!-- ELEMENTO USADO POR JS -->
-<span id="usuarioInfo" style="display:none;"></span>
-
 <div class="container">
-  <div class="card">
+<div class="card">
 
-    <!-- CONTROLES -->
-    <div class="controls">
-      <button id="btnLoad" class="btn-load" onclick="cargarUsuarios()">
-        <span>Cargar usuarios</span>
-      </button>
+<!-- CONTROLES -->
+<div class="controls">
+  <button id="btnLoad" class="btn-load" onclick="cargarUsuarios()">Cargar usuarios</button>
+  <input id="busqueda" placeholder="Buscar usuario, nombre o rol" oninput="filtrar()">
+  <button class="btn-success" onclick="abrirCrear()">+ Crear Usuario</button>
+</div>
 
-      <input id="busqueda" placeholder="Buscar usuario, nombre o rol" oninput="filtrar()">
+<!-- TABLA ESCRITORIO -->
+<table>
+<thead>
+<tr>
+  <th>Usuario</th>
+  <th>Contraseña</th>
+  <th>Nombre</th>
+  <th>Rol</th>
+  <th>Activo</th>
+  <th>Acciones</th>
+</tr>
+</thead>
+<tbody id="tablaUsuarios">
+<tr><td colspan="6">Presione “Cargar usuarios”</td></tr>
+</tbody>
+</table>
 
-      <button class="btn-success" onclick="abrirCrear()">+ Crear Usuario</button>
-    </div>
+<!-- TARJETAS MÓVIL -->
+<div id="mobileList" class="mobile-list"></div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Usuario</th>
-          <th>Contraseña</th>
-          <th>Nombre</th>
-          <th>Rol</th>
-          <th>Activo</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="tablaUsuarios">
-        <tr><td colspan="6">Presione “Cargar usuarios”</td></tr>
-      </tbody>
-    </table>
-
-  </div>
+</div>
 </div>
 
 <!-- MODAL USUARIO -->
 <div class="modal" id="modalUsuario">
-  <div class="modal-content">
-    <h3 id="tituloUsuario"></h3>
+<div class="modal-content">
+<h3 id="tituloUsuario"></h3>
 
-    <input id="u_user" placeholder="Usuario">
-    <input id="u_pass" placeholder="Contraseña">
-    <input id="u_nombre" placeholder="Nombre">
+<input id="u_user" placeholder="Usuario">
+<input id="u_pass" placeholder="Contraseña">
+<input id="u_nombre" placeholder="Nombre">
 
-    <select id="u_rol">
-      <option>ADMIN</option>
-      <option>OPERADOR</option>
-      <option>SUPERVISOR</option>
-    </select>
+<select id="u_rol">
+  <option>ADMIN</option>
+  <option>OPERADOR</option>
+  <option>SUPERVISOR</option>
+</select>
 
-    <select id="u_activo">
-      <option value="SI">ACTIVO</option>
-      <option value="NO">INACTIVO</option>
-    </select>
+<select id="u_activo">
+  <option value="SI">ACTIVO</option>
+  <option value="NO">INACTIVO</option>
+</select>
 
-    <h4>Permisos</h4>
-    <div class="permissions">
-      <label><input type="checkbox" value="inventario"> Inventario</label>
-      <label><input type="checkbox" value="etiquetas"> Etiquetas</label>
-      <label><input type="checkbox" value="codigos"> Códigos</label>
-      <label><input type="checkbox" value="dashboard"> Dashboard</label>
-      <label><input type="checkbox" value="usuarios"> Usuarios</label>
-    </div>
+<h4>Permisos</h4>
+<div class="permissions">
+  <label><input type="checkbox" value="inventario"> Inventario</label>
+  <label><input type="checkbox" value="etiquetas"> Etiquetas</label>
+  <label><input type="checkbox" value="codigos"> Códigos</label>
+  <label><input type="checkbox" value="dashboard"> Dashboard</label>
+  <label><input type="checkbox" value="usuarios"> Usuarios</label>
+</div>
 
-    <div class="footer-btns">
-      <button id="btnGuardar" class="btn-success" onclick="guardarUsuario()">Guardar</button>
-      <button class="btn-danger" onclick="cerrarUsuario()">Cancelar</button>
-    </div>
-  </div>
+<div class="footer-btns">
+  <button id="btnGuardar" class="btn-success" onclick="guardarUsuario()">Guardar</button>
+  <button class="btn-danger" onclick="cerrarUsuario()">Cancelar</button>
+</div>
+</div>
 </div>
 
 <script>
-/* ================= CONFIG ================= */
-const API = "https://script.google.com/macros/s/AKfycbzhpjRngwZW2z4d49pUuHtEci23KFxZkETu-SvB5OPPDJpXnqOkc_MchNE-nWYPfAzw/exec";
-let usuarios = [];
-let modo = "crear";
+const API="https://script.google.com/macros/s/AKfycbzhpjRngwZW2z4d49pUuHtEci23KFxZkETu-SvB5OPPDJpXnqOkc_MchNE-nWYPfAzw/exec";
+let usuarios=[],modo="crear";
 
-/* ================= SESION ================= */
-async function verificarSesion(){
-  const token = localStorage.getItem("token");
-  const ip = localStorage.getItem("ip");
-
-  if(!token) location.href="login.html";
-
-  const r = await fetch(API+"?action=verify&token="+token+"&ip="+ip);
-  const d = await r.json();
-
-  if(!d.valid || d.rol !== "ADMIN"){
-    localStorage.clear();
-    location.href="login.html";
-  }
-}
-verificarSesion();
-
-/* ================= CARGAR ================= */
+/* ========== CARGAR ========== */
 async function cargarUsuarios(){
+  btnLoad.classList.add("btn-loading");
+  btnLoad.innerHTML=`<div class="loader"></div>Cargando`;
 
-  const btn = document.getElementById("btnLoad");
-  btn.classList.add("btn-loading");
-  btn.innerHTML = `<div class="loader"></div> Cargando...`;
+  const r=await fetch(API+"?action=listarUsuarios");
+  const d=await r.json();
+  usuarios=d.data||[];
+  render(usuarios);
 
-  tablaUsuarios.innerHTML = `<tr><td colspan="6">Cargando...</td></tr>`;
-
-  try{
-    const r = await fetch(API+"?action=listarUsuarios");
-    const d = await r.json();
-    usuarios = d.data || [];
-    renderTabla(usuarios);
-  }catch{
-    tablaUsuarios.innerHTML = `<tr><td colspan="6">Error al cargar</td></tr>`;
-  }
-
-  btn.classList.remove("btn-loading");
-  btn.innerHTML = `<span>Cargar usuarios</span>`;
+  btnLoad.classList.remove("btn-loading");
+  btnLoad.innerHTML="Cargar usuarios";
 }
 
-/* ================= TABLA ================= */
-function renderTabla(data){
-  tablaUsuarios.innerHTML = "";
+/* ========== RENDER ========== */
+function render(data){
+  tablaUsuarios.innerHTML="";
+  mobileList.innerHTML="";
 
-  if(data.length === 0){
-    tablaUsuarios.innerHTML = `<tr><td colspan="6">Sin resultados</td></tr>`;
+  if(!data.length){
+    tablaUsuarios.innerHTML=`<tr><td colspan="6">Sin datos</td></tr>`;
     return;
   }
 
   data.forEach(u=>{
-    tablaUsuarios.innerHTML += `
-      <tr>
-        <td>${u[1]}</td>
-        <td>${u[2]}</td>
-        <td>${u[3]}</td>
-        <td>${u[4]}</td>
-        <td>${u[5]}</td>
-        <td>
-          <button class="btn-edit"
-            onclick="editarUsuario('${u[1]}','${u[2]}','${u[3]}','${u[4]}','${u[5]}','${u[10]||""}')">
-            Editar
-          </button>
-          <button class="btn-danger" onclick="eliminarUsuario('${u[1]}')">
-            Eliminar
-          </button>
-        </td>
-      </tr>`;
+    tablaUsuarios.innerHTML+=`
+    <tr>
+      <td>${u[1]}</td>
+      <td>${u[2]}</td>
+      <td>${u[3]}</td>
+      <td>${u[4]}</td>
+      <td>${u[5]}</td>
+      <td>
+        <button class="btn-edit" onclick="editar('${u[1]}','${u[2]}','${u[3]}','${u[4]}','${u[5]}','${u[10]||""}')">Editar</button>
+        <button class="btn-danger" onclick="eliminarUsuario('${u[1]}')">Eliminar</button>
+      </td>
+    </tr>`;
+
+    mobileList.innerHTML+=`
+    <div class="mobile-card">
+      <h4>${u[1]}</h4>
+      <p><b>Contraseña:</b> ${u[2]}</p>
+      <p><b>Nombre:</b> ${u[3]}</p>
+      <p><b>Rol:</b> ${u[4]}</p>
+      <p><b>Activo:</b> ${u[5]}</p>
+      <div class="mobile-actions">
+        <button class="btn-edit" onclick="editar('${u[1]}','${u[2]}','${u[3]}','${u[4]}','${u[5]}','${u[10]||""}')">Editar</button>
+        <button class="btn-danger" onclick="eliminarUsuario('${u[1]}')">Eliminar</button>
+      </div>
+    </div>`;
   });
 }
 
-/* ================= FILTRO ================= */
+/* ========== FILTRO ========== */
 function filtrar(){
-  const q = busqueda.value.toLowerCase();
-  renderTabla(
-    usuarios.filter(u =>
-      u[1].toLowerCase().includes(q) ||
-      u[3].toLowerCase().includes(q) ||
-      u[4].toLowerCase().includes(q)
-    )
-  );
+  const q=busqueda.value.toLowerCase();
+  render(usuarios.filter(u=>
+    u[1].toLowerCase().includes(q)||
+    u[3].toLowerCase().includes(q)||
+    u[4].toLowerCase().includes(q)
+  ));
 }
 
-/* ================= MODAL ================= */
+/* ========== MODAL ========== */
 function abrirCrear(){
   modo="crear";
   tituloUsuario.innerText="Crear Usuario";
-  limpiarFormulario();
   u_user.disabled=false;
+  limpiar();
   modalUsuario.style.display="flex";
 }
 
-function editarUsuario(usuario,pass,nombre,rol,activo,permisos){
+function editar(u,p,n,r,a,per){
   modo="editar";
   tituloUsuario.innerText="Editar Usuario";
-
-  u_user.value = usuario;
-  u_user.disabled = true;
-  u_pass.value = pass;
-  u_nombre.value = nombre;
-  u_rol.value = rol;
-  u_activo.value = activo;
-
+  u_user.value=u; u_user.disabled=true;
+  u_pass.value=p;
+  u_nombre.value=n;
+  u_rol.value=r;
+  u_activo.value=a;
   document.querySelectorAll(".permissions input")
-    .forEach(c=>c.checked = permisos.includes(c.value));
-
+    .forEach(c=>c.checked=per.includes(c.value));
   modalUsuario.style.display="flex";
 }
 
-function cerrarUsuario(){
-  modalUsuario.style.display="none";
-}
-
-function limpiarFormulario(){
-  u_user.value="";
-  u_pass.value="";
-  u_nombre.value="";
-  u_rol.value="ADMIN";
-  u_activo.value="SI";
+function cerrarUsuario(){ modalUsuario.style.display="none"; }
+function limpiar(){
+  u_user.value="";u_pass.value="";u_nombre.value="";
   document.querySelectorAll(".permissions input").forEach(c=>c.checked=false);
 }
 
-/* ================= GUARDAR ================= */
+/* ========== GUARDAR ========== */
 async function guardarUsuario(){
+  btnGuardar.classList.add("btn-loading");
+  btnGuardar.innerHTML=`<div class="loader"></div>Guardando`;
 
-  const btn = document.getElementById("btnGuardar");
-  btn.classList.add("btn-loading");
-  btn.innerHTML = `<div class="loader"></div> Guardando...`;
-
-  const permisos = [...document.querySelectorAll(".permissions input:checked")]
-    .map(c=>c.value).join(",");
-
-  try{
-    await fetch(API,{
-      method:"POST",
-      headers:{ "Content-Type":"text/plain" },
-      body:JSON.stringify({
-        action: modo==="crear" ? "crearUsuario" : "editarUsuario",
-        username:u_user.value,
-        password:u_pass.value,
-        nombre:u_nombre.value,
-        rol:u_rol.value,
-        activo:u_activo.value,
-        permisos:permisos
-      })
-    });
-
-    cerrarUsuario();
-    cargarUsuarios();
-
-  }finally{
-    btn.classList.remove("btn-loading");
-    btn.innerHTML = `Guardar`;
-  }
-}
-
-/* ================= ELIMINAR ================= */
-async function eliminarUsuario(usuario){
-
-  if(!confirm("¿Eliminar usuario "+usuario+"?")) return;
+  const permisos=[...document.querySelectorAll(".permissions input:checked")].map(c=>c.value).join(",");
 
   await fetch(API,{
     method:"POST",
-    headers:{ "Content-Type":"text/plain" },
+    headers:{"Content-Type":"text/plain"},
     body:JSON.stringify({
-      action:"eliminarUsuario",
-      username:usuario
+      action:modo==="crear"?"crearUsuario":"editarUsuario",
+      username:u_user.value,
+      password:u_pass.value,
+      nombre:u_nombre.value,
+      rol:u_rol.value,
+      activo:u_activo.value,
+      permisos
     })
   });
 
+  cerrarUsuario();
+  cargarUsuarios();
+  btnGuardar.classList.remove("btn-loading");
+  btnGuardar.innerHTML="Guardar";
+}
+
+/* ========== ELIMINAR ========== */
+async function eliminarUsuario(u){
+  if(!confirm("Eliminar "+u+"?"))return;
+  await fetch(API,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain"},
+    body:JSON.stringify({action:"eliminarUsuario",username:u})
+  });
   cargarUsuarios();
 }
 </script>
-
-<!-- SEGURIDAD -->
 <script src="segurity.js"></script>
-
 </body>
 </html>
