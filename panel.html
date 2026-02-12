@@ -63,7 +63,6 @@ button{
   border-radius:50%;
   animation:spin .7s linear infinite;
 }
-
 @keyframes spin{ to{ transform:rotate(360deg); } }
 
 .btn-loading{
@@ -75,17 +74,9 @@ button{
   gap:8px;
 }
 
-/* ================= TABLA (ESCRITORIO) ================= */
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-th{
-  background:#f1f5f9;
-  padding:14px;
-}
-
+/* ================= TABLA ESCRITORIO ================= */
+table{ width:100%; border-collapse:collapse; }
+th{ background:#f1f5f9; padding:14px; }
 td{
   padding:12px;
   border-bottom:1px solid #eee;
@@ -129,21 +120,33 @@ input,select{
 .footer-btns{
   margin-top:20px;
   text-align:right;
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
 }
 
-/* ================= MOBILE CARDS ================= */
-/* 🔒 OCULTAS POR DEFECTO (ESCRITORIO) */
-.mobile-list{
-  display:none;
-}
+/* ================= MOBILE ================= */
+.mobile-list{ display:none; }
 
-/* 📱 SOLO MÓVIL */
 @media (max-width:768px){
 
-  table, thead{
-    display:none;
+  /* CONTROLES */
+  .controls{
+    flex-direction:column;
+    align-items:stretch;
   }
 
+  .controls input{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    box-sizing:border-box;
+  }
+
+  /* TABLA */
+  table, thead{ display:none; }
+
+  /* TARJETAS */
   .mobile-list{
     display:flex;
     flex-direction:column;
@@ -158,16 +161,8 @@ input,select{
     border:1px solid #e5e7eb;
   }
 
-  .mobile-card h4{
-    margin:0 0 6px;
-    font-size:15px;
-  }
-
-  .mobile-card p{
-    margin:4px 0;
-    font-size:13px;
-    color:#475569;
-  }
+  .mobile-card h4{ margin:0 0 6px; }
+  .mobile-card p{ margin:4px 0; font-size:13px; }
 
   .mobile-actions{
     display:flex;
@@ -175,8 +170,29 @@ input,select{
     margin-top:10px;
   }
 
-  .mobile-actions button{
-    flex:1;
+  .mobile-actions button{ flex:1; }
+
+  /* ===== MODAL MOBILE FIX ===== */
+  .modal{
+    align-items:flex-start;
+    padding:20px 10px;
+  }
+
+  .modal-content{
+    width:100%;
+    max-width:100%;
+    padding:20px;
+    border-radius:14px;
+  }
+
+  .footer-btns{
+    margin-top:12px;
+    padding-top:10px;
+    flex-direction:column;
+  }
+
+  .footer-btns button{
+    width:100%;
   }
 }
 </style>
@@ -187,14 +203,12 @@ input,select{
 <div class="container">
 <div class="card">
 
-<!-- CONTROLES -->
 <div class="controls">
   <button id="btnLoad" class="btn-load" onclick="cargarUsuarios()">Cargar usuarios</button>
   <input id="busqueda" placeholder="Buscar usuario, nombre o rol" oninput="filtrar()">
   <button class="btn-success" onclick="abrirCrear()">+ Crear Usuario</button>
 </div>
 
-<!-- TABLA ESCRITORIO -->
 <table>
 <thead>
 <tr>
@@ -211,13 +225,12 @@ input,select{
 </tbody>
 </table>
 
-<!-- TARJETAS MÓVIL -->
 <div id="mobileList" class="mobile-list"></div>
 
 </div>
 </div>
 
-<!-- MODAL USUARIO -->
+<!-- MODAL -->
 <div class="modal" id="modalUsuario">
 <div class="modal-content">
 <h3 id="tituloUsuario"></h3>
@@ -257,44 +270,30 @@ input,select{
 const API="https://script.google.com/macros/s/AKfycbzhpjRngwZW2z4d49pUuHtEci23KFxZkETu-SvB5OPPDJpXnqOkc_MchNE-nWYPfAzw/exec";
 let usuarios=[],modo="crear";
 
-/* ========== CARGAR ========== */
 async function cargarUsuarios(){
   btnLoad.classList.add("btn-loading");
   btnLoad.innerHTML=`<div class="loader"></div>Cargando`;
-
   const r=await fetch(API+"?action=listarUsuarios");
   const d=await r.json();
   usuarios=d.data||[];
   render(usuarios);
-
   btnLoad.classList.remove("btn-loading");
   btnLoad.innerHTML="Cargar usuarios";
 }
 
-/* ========== RENDER ========== */
 function render(data){
   tablaUsuarios.innerHTML="";
   mobileList.innerHTML="";
-
-  if(!data.length){
-    tablaUsuarios.innerHTML=`<tr><td colspan="6">Sin datos</td></tr>`;
-    return;
-  }
-
   data.forEach(u=>{
     tablaUsuarios.innerHTML+=`
     <tr>
-      <td>${u[1]}</td>
-      <td>${u[2]}</td>
-      <td>${u[3]}</td>
-      <td>${u[4]}</td>
-      <td>${u[5]}</td>
+      <td>${u[1]}</td><td>${u[2]}</td><td>${u[3]}</td>
+      <td>${u[4]}</td><td>${u[5]}</td>
       <td>
         <button class="btn-edit" onclick="editar('${u[1]}','${u[2]}','${u[3]}','${u[4]}','${u[5]}','${u[10]||""}')">Editar</button>
         <button class="btn-danger" onclick="eliminarUsuario('${u[1]}')">Eliminar</button>
       </td>
     </tr>`;
-
     mobileList.innerHTML+=`
     <div class="mobile-card">
       <h4>${u[1]}</h4>
@@ -310,17 +309,11 @@ function render(data){
   });
 }
 
-/* ========== FILTRO ========== */
 function filtrar(){
   const q=busqueda.value.toLowerCase();
-  render(usuarios.filter(u=>
-    u[1].toLowerCase().includes(q)||
-    u[3].toLowerCase().includes(q)||
-    u[4].toLowerCase().includes(q)
-  ));
+  render(usuarios.filter(u=>u[1].toLowerCase().includes(q)||u[3].toLowerCase().includes(q)||u[4].toLowerCase().includes(q)));
 }
 
-/* ========== MODAL ========== */
 function abrirCrear(){
   modo="crear";
   tituloUsuario.innerText="Crear Usuario";
@@ -333,59 +326,38 @@ function editar(u,p,n,r,a,per){
   modo="editar";
   tituloUsuario.innerText="Editar Usuario";
   u_user.value=u; u_user.disabled=true;
-  u_pass.value=p;
-  u_nombre.value=n;
-  u_rol.value=r;
-  u_activo.value=a;
-  document.querySelectorAll(".permissions input")
-    .forEach(c=>c.checked=per.includes(c.value));
+  u_pass.value=p; u_nombre.value=n;
+  u_rol.value=r; u_activo.value=a;
+  document.querySelectorAll(".permissions input").forEach(c=>c.checked=per.includes(c.value));
   modalUsuario.style.display="flex";
 }
 
 function cerrarUsuario(){ modalUsuario.style.display="none"; }
+
 function limpiar(){
   u_user.value="";u_pass.value="";u_nombre.value="";
   document.querySelectorAll(".permissions input").forEach(c=>c.checked=false);
 }
 
-/* ========== GUARDAR ========== */
 async function guardarUsuario(){
   btnGuardar.classList.add("btn-loading");
   btnGuardar.innerHTML=`<div class="loader"></div>Guardando`;
-
   const permisos=[...document.querySelectorAll(".permissions input:checked")].map(c=>c.value).join(",");
-
-  await fetch(API,{
-    method:"POST",
-    headers:{"Content-Type":"text/plain"},
-    body:JSON.stringify({
-      action:modo==="crear"?"crearUsuario":"editarUsuario",
-      username:u_user.value,
-      password:u_pass.value,
-      nombre:u_nombre.value,
-      rol:u_rol.value,
-      activo:u_activo.value,
-      permisos
-    })
-  });
-
-  cerrarUsuario();
-  cargarUsuarios();
-  btnGuardar.classList.remove("btn-loading");
-  btnGuardar.innerHTML="Guardar";
+  await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain"},
+    body:JSON.stringify({action:modo==="crear"?"crearUsuario":"editarUsuario",
+      username:u_user.value,password:u_pass.value,nombre:u_nombre.value,
+      rol:u_rol.value,activo:u_activo.value,permisos})});
+  cerrarUsuario(); cargarUsuarios();
+  btnGuardar.classList.remove("btn-loading"); btnGuardar.innerHTML="Guardar";
 }
 
-/* ========== ELIMINAR ========== */
 async function eliminarUsuario(u){
   if(!confirm("Eliminar "+u+"?"))return;
-  await fetch(API,{
-    method:"POST",
-    headers:{"Content-Type":"text/plain"},
-    body:JSON.stringify({action:"eliminarUsuario",username:u})
-  });
+  await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain"},
+    body:JSON.stringify({action:"eliminarUsuario",username:u})});
   cargarUsuarios();
 }
 </script>
-<script src="segurity.js"></script>
+
 </body>
 </html>
