@@ -8,9 +8,9 @@
 <style>
 /* ================= BASE ================= */
 body{
-  margin:0;
   font-family:'Segoe UI',Arial;
   background:#f4f7fb;
+  margin:0;
 }
 
 .container{
@@ -30,16 +30,16 @@ body{
 .controls{
   display:flex;
   gap:10px;
+  margin-bottom:20px;
   flex-wrap:wrap;
-  margin-bottom:18px;
 }
 
 .controls input{
   padding:10px;
   border-radius:8px;
   border:1px solid #ddd;
-  width:260px;
-  max-width:100%;
+  max-width:320px;
+  width:100%;
 }
 
 button{
@@ -72,11 +72,11 @@ button{
   opacity:.8;
   display:flex;
   align-items:center;
-  gap:8px;
   justify-content:center;
+  gap:8px;
 }
 
-/* ================= TABLA ================= */
+/* ================= TABLA (ESCRITORIO) ================= */
 table{
   width:100%;
   border-collapse:collapse;
@@ -94,7 +94,55 @@ td{
   font-size:13px;
 }
 
-/* ================= MODAL ================= */
+/* ================= TARJETAS MÓVIL ================= */
+.mobile-list{ display:none; }
+
+@media (max-width:768px){
+
+  table, thead{ display:none; }
+
+  .controls input{
+    max-width:100%;
+  }
+
+  .mobile-list{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+
+  .mobile-card{
+    background:#fff;
+    border-radius:16px;
+    padding:16px;
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+    border:1px solid #e5e7eb;
+  }
+
+  .mobile-card h4{
+    margin:0 0 6px;
+    font-size:15px;
+  }
+
+  .mobile-card p{
+    margin:4px 0;
+    font-size:13px;
+    color:#475569;
+  }
+
+  .mobile-actions{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+  }
+
+  .mobile-actions button{
+    flex:1;
+    font-size:13px;
+  }
+}
+
+/* ================= MODALES ================= */
 .modal{
   position:fixed;
   inset:0;
@@ -108,19 +156,17 @@ td{
 .modal-content{
   background:#fff;
   width:520px;
-  max-width:95%;
-  padding:22px;
+  max-width:92%;
+  padding:20px;
   border-radius:16px;
   max-height:90vh;
   overflow:auto;
 }
 
-.modal-content h3{ margin-top:0 }
-
 input,select{
   width:100%;
   padding:10px;
-  margin-top:8px;
+  margin-top:10px;
   border-radius:8px;
   border:1px solid #ddd;
 }
@@ -129,7 +175,7 @@ input,select{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:8px;
-  margin-top:10px;
+  margin-top:12px;
 }
 
 .footer-btns{
@@ -138,39 +184,8 @@ input,select{
   margin-top:16px;
 }
 
-/* ================= MOVIL ================= */
-@media(max-width:768px){
-
-.controls input{
-  width:100%;
-}
-
-table, thead{
-  display:none;
-}
-
-.mobile-list{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-.mobile-card{
-  background:#fff;
-  border-radius:16px;
-  padding:16px;
-  box-shadow:0 10px 25px rgba(0,0,0,.08);
-}
-
-.mobile-actions{
-  display:flex;
-  gap:8px;
-  margin-top:10px;
-}
-
-.footer-btns{
-  flex-direction:column;
-}
+.footer-btns button{
+  flex:1;
 }
 </style>
 </head>
@@ -180,13 +195,14 @@ table, thead{
 <div class="container">
   <div class="card">
 
+    <!-- CONTROLES -->
     <div class="controls">
       <button id="btnLoad" class="btn-load" onclick="cargarUsuarios()">Cargar usuarios</button>
       <input id="busqueda" placeholder="Buscar usuario, nombre o rol" oninput="filtrar()">
-      <button class="btn-success" onclick="abrirCrear()">+ Usuario</button>
-      <button class="btn-success" onclick="abrirModulos()">⚙️ Módulos</button>
+      <button class="btn-success" onclick="abrirCrear()">+ Crear Usuario</button>
     </div>
 
+    <!-- TABLA ESCRITORIO -->
     <table>
       <thead>
         <tr>
@@ -203,12 +219,13 @@ table, thead{
       </tbody>
     </table>
 
+    <!-- TARJETAS MÓVIL -->
     <div id="mobileList" class="mobile-list"></div>
 
   </div>
 </div>
 
-<!-- ================= MODAL USUARIO ================= -->
+<!-- MODAL USUARIO -->
 <div class="modal" id="modalUsuario">
   <div class="modal-content">
     <h3 id="tituloUsuario"></h3>
@@ -229,104 +246,110 @@ table, thead{
     </select>
 
     <h4>Permisos</h4>
-    <div class="permissions" id="listaPermisos"></div>
+    <div class="permissions">
+      <label><input type="checkbox" value="inventario"> Inventario</label>
+      <label><input type="checkbox" value="etiquetas"> Etiquetas</label>
+      <label><input type="checkbox" value="codigos"> Códigos</label>
+      <label><input type="checkbox" value="dashboard"> Dashboard</label>
+      <label><input type="checkbox" value="usuarios"> Usuarios</label>
+    </div>
 
     <div class="footer-btns">
-      <button class="btn-success" onclick="guardarUsuario()">Guardar</button>
+      <button id="btnGuardar" class="btn-success" onclick="guardarUsuario()">Guardar</button>
       <button class="btn-danger" onclick="cerrarUsuario()">Cancelar</button>
     </div>
   </div>
 </div>
 
-<!-- ================= MODAL MODULOS ================= -->
-<div class="modal" id="modalModulos">
-  <div class="modal-content">
-    <h3>Crear Módulo</h3>
-
-    <input id="m_nombre" placeholder="Nombre">
-    <input id="m_archivo" placeholder="Archivo HTML">
-    <input id="m_icono" placeholder="Icono">
-    <input id="m_permiso" placeholder="Permiso">
-
-    <select id="m_activo">
-      <option value="SI">ACTIVO</option>
-      <option value="NO">INACTIVO</option>
-    </select>
-
-    <div class="footer-btns">
-      <button class="btn-success" onclick="crearModulo()">Guardar</button>
-      <button class="btn-danger" onclick="cerrarModulos()">Cerrar</button>
-    </div>
-  </div>
-</div>
-
 <script>
-const API = "https://script.google.com/macros/s/AKfycbzhpjRngwZW2z4d49pUuHtEci23KFxZkETu-SvB5OPPDJpXnqOkc_MchNE-nWYPfAzw/exec";
+/* ================= CONFIG ================= */
+const API = "PEGA_AQUI_TU_URL_APPS_SCRIPT";
 let usuarios = [];
-let modulos = [];
 let modo = "crear";
+
+/* ================= SESIÓN ================= */
+(async()=>{
+  const token = localStorage.getItem("token");
+  const ip = localStorage.getItem("ip");
+  if(!token) location.href="login.html";
+
+  const r = await fetch(API+"?action=verify&token="+token+"&ip="+ip);
+  const d = await r.json();
+  if(!d.valid || d.rol!=="ADMIN"){
+    localStorage.clear();
+    location.href="login.html";
+  }
+})();
 
 /* ================= CARGAR ================= */
 async function cargarUsuarios(){
+  btnLoad.classList.add("btn-loading");
+  btnLoad.innerHTML=`<div class="loader"></div> Cargando`;
+
   const r = await fetch(API+"?action=listarUsuarios");
   const d = await r.json();
   usuarios = d.data || [];
-  renderUsuarios(usuarios);
+  render(usuarios);
+
+  btnLoad.classList.remove("btn-loading");
+  btnLoad.innerHTML="Cargar usuarios";
 }
 
 /* ================= RENDER ================= */
-function renderUsuarios(data){
+function render(data){
   tablaUsuarios.innerHTML="";
   mobileList.innerHTML="";
 
   data.forEach(u=>{
+    // tabla
     tablaUsuarios.innerHTML+=`
-    <tr>
-      <td>${u[1]}</td>
-      <td>${u[2]}</td>
-      <td>${u[3]}</td>
-      <td>${u[4]}</td>
-      <td>${u[5]}</td>
-      <td>
-        <button class="btn-edit" onclick="editarUsuario('${u[1]}','${u[2]}','${u[3]}','${u[4]}','${u[5]}','${u[10]}')">Editar</button>
-        <button class="btn-danger" onclick="eliminarUsuario('${u[1]}')">Eliminar</button>
-      </td>
-    </tr>`;
+      <tr>
+        <td>${u[1]}</td>
+        <td>${u[2]}</td>
+        <td>${u[3]}</td>
+        <td>${u[4]}</td>
+        <td>${u[5]}</td>
+        <td>
+          <button class="btn-edit" onclick="editar('${u[1]}','${u[2]}','${u[3]}','${u[4]}','${u[5]}','${u[10]||""}')">Editar</button>
+          <button class="btn-danger" onclick="eliminarUsuario('${u[1]}')">Eliminar</button>
+        </td>
+      </tr>`;
 
+    // móvil
     mobileList.innerHTML+=`
-    <div class="mobile-card">
-      <b>${u[1]}</b>
-      <p>Contraseña: ${u[2]}</p>
-      <p>${u[3]} - ${u[4]}</p>
-      <div class="mobile-actions">
-        <button class="btn-edit" onclick="editarUsuario('${u[1]}','${u[2]}','${u[3]}','${u[4]}','${u[5]}','${u[10]}')">Editar</button>
-        <button class="btn-danger" onclick="eliminarUsuario('${u[1]}')">Eliminar</button>
-      </div>
-    </div>`;
+      <div class="mobile-card">
+        <h4>${u[3]}</h4>
+        <p><b>Usuario:</b> ${u[1]}</p>
+        <p><b>Clave:</b> ${u[2]}</p>
+        <p><b>Rol:</b> ${u[4]}</p>
+        <div class="mobile-actions">
+          <button class="btn-edit" onclick="editar('${u[1]}','${u[2]}','${u[3]}','${u[4]}','${u[5]}','${u[10]||""}')">Editar</button>
+          <button class="btn-danger" onclick="eliminarUsuario('${u[1]}')">Eliminar</button>
+        </div>
+      </div>`;
   });
 }
 
 /* ================= FILTRO ================= */
 function filtrar(){
   const q = busqueda.value.toLowerCase();
-  renderUsuarios(usuarios.filter(u =>
+  render(usuarios.filter(u =>
     u[1].toLowerCase().includes(q) ||
     u[3].toLowerCase().includes(q) ||
     u[4].toLowerCase().includes(q)
   ));
 }
 
-/* ================= MODALES ================= */
+/* ================= MODAL ================= */
 function abrirCrear(){
   modo="crear";
   tituloUsuario.innerText="Crear Usuario";
   u_user.disabled=false;
-  limpiarUsuario();
-  cargarPermisos();
+  limpiar();
   modalUsuario.style.display="flex";
 }
 
-function editarUsuario(u,p,n,r,a,perms){
+function editar(u,p,n,r,a,per){
   modo="editar";
   tituloUsuario.innerText="Editar Usuario";
   u_user.value=u; u_user.disabled=true;
@@ -334,33 +357,24 @@ function editarUsuario(u,p,n,r,a,perms){
   u_nombre.value=n;
   u_rol.value=r;
   u_activo.value=a;
-  cargarPermisos(perms);
+  document.querySelectorAll(".permissions input").forEach(c=>c.checked=per.includes(c.value));
   modalUsuario.style.display="flex";
 }
 
 function cerrarUsuario(){ modalUsuario.style.display="none"; }
-function abrirModulos(){ modalModulos.style.display="flex"; }
-function cerrarModulos(){ modalModulos.style.display="none"; }
 
-/* ================= PERMISOS ================= */
-async function cargarPermisos(selected=""){
-  const r = await fetch(API+"?action=listarModulos");
-  const d = await r.json();
-  modulos = d.data || [];
-  listaPermisos.innerHTML="";
-  modulos.forEach(m=>{
-    listaPermisos.innerHTML+=`
-    <label>
-      <input type="checkbox" value="${m[4]}" ${selected.includes(m[4])?"checked":""}>
-      ${m[1]}
-    </label>`;
-  });
+function limpiar(){
+  u_user.value=""; u_pass.value=""; u_nombre.value="";
+  u_rol.value="ADMIN"; u_activo.value="SI";
+  document.querySelectorAll(".permissions input").forEach(c=>c.checked=false);
 }
 
-/* ================= CRUD ================= */
+/* ================= GUARDAR ================= */
 async function guardarUsuario(){
-  const perms=[...document.querySelectorAll("#listaPermisos input:checked")]
-    .map(c=>c.value).join(",");
+  btnGuardar.classList.add("btn-loading");
+  btnGuardar.innerHTML=`<div class="loader"></div> Guardando`;
+
+  const permisos=[...document.querySelectorAll(".permissions input:checked")].map(c=>c.value).join(",");
 
   await fetch(API,{
     method:"POST",
@@ -372,38 +386,23 @@ async function guardarUsuario(){
       nombre:u_nombre.value,
       rol:u_rol.value,
       activo:u_activo.value,
-      permisos:perms
+      permisos
     })
   });
 
   cerrarUsuario();
   cargarUsuarios();
+  btnGuardar.classList.remove("btn-loading");
+  btnGuardar.innerHTML="Guardar";
 }
 
+/* ================= ELIMINAR ================= */
 async function eliminarUsuario(u){
   if(!confirm("Eliminar "+u+"?")) return;
-  await fetch(API,{
-    method:"POST",
-    headers:{ "Content-Type":"text/plain" },
+  await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain"},
     body:JSON.stringify({action:"eliminarUsuario",username:u})
   });
   cargarUsuarios();
-}
-
-async function crearModulo(){
-  await fetch(API,{
-    method:"POST",
-    headers:{ "Content-Type":"text/plain" },
-    body:JSON.stringify({
-      action:"crearModulo",
-      nombre:m_nombre.value,
-      archivo:m_archivo.value,
-      icono:m_icono.value,
-      permiso:m_permiso.value,
-      activo:m_activo.value
-    })
-  });
-  cerrarModulos();
 }
 </script>
 
