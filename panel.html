@@ -6,14 +6,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
+/* ================= BASE ================= */
 body{
+  margin:0;
   font-family:'Segoe UI',Arial;
   background:#f4f7fb;
-  margin:0;
 }
 
 .container{
-  padding:40px;
+  padding:24px;
   max-width:1300px;
   margin:auto;
 }
@@ -21,23 +22,24 @@ body{
 .card{
   background:#fff;
   border-radius:18px;
-  padding:30px;
+  padding:24px;
   box-shadow:0 15px 35px rgba(0,0,0,.08);
 }
 
-/* CONTROLES */
+/* ================= CONTROLES ================= */
 .controls{
   display:flex;
   gap:10px;
-  margin-bottom:20px;
   flex-wrap:wrap;
+  margin-bottom:18px;
 }
 
 .controls input{
   padding:10px;
   border-radius:8px;
   border:1px solid #ddd;
-  min-width:240px;
+  width:260px;
+  max-width:100%;
 }
 
 button{
@@ -50,13 +52,41 @@ button{
 
 .btn-load{ background:#3b82f6; color:#fff; }
 .btn-success{ background:#10b981; color:#fff; }
-.btn-secondary{ background:#0ea5e9; color:#fff; }
 .btn-edit{ background:#6366f1; color:#fff; padding:6px 12px; }
 .btn-danger{ background:#ef4444; color:#fff; padding:6px 12px; }
 
-/* TABLA */
-table{ width:100%; border-collapse:collapse; }
-th{ background:#f1f5f9; padding:14px; }
+/* ================= LOADER ================= */
+.loader{
+  width:16px;
+  height:16px;
+  border:3px solid rgba(255,255,255,.5);
+  border-top:3px solid #fff;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+
+@keyframes spin{ to{transform:rotate(360deg)} }
+
+.btn-loading{
+  pointer-events:none;
+  opacity:.8;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  justify-content:center;
+}
+
+/* ================= TABLA ================= */
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th{
+  background:#f1f5f9;
+  padding:14px;
+}
+
 td{
   padding:12px;
   border-bottom:1px solid #eee;
@@ -64,52 +94,83 @@ td{
   font-size:13px;
 }
 
-/* MODAL */
+/* ================= MODAL ================= */
 .modal{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.5);
   display:none;
-  align-items:flex-start;
+  align-items:center;
   justify-content:center;
-  padding:12px;
   z-index:1000;
 }
 
 .modal-content{
   background:#fff;
   width:520px;
-  max-width:100%;
-  max-height:90vh;
-  overflow-y:auto;
-  padding:20px;
+  max-width:95%;
+  padding:22px;
   border-radius:16px;
+  max-height:90vh;
+  overflow:auto;
 }
+
+.modal-content h3{ margin-top:0 }
 
 input,select{
   width:100%;
   padding:10px;
-  margin-top:10px;
+  margin-top:8px;
   border-radius:8px;
   border:1px solid #ddd;
 }
 
+.permissions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:10px;
+}
+
 .footer-btns{
-  margin-top:16px;
   display:flex;
   gap:10px;
-  flex-wrap:wrap;
+  margin-top:16px;
 }
 
-.footer-btns button{
-  flex:1;
-}
-
-/* MOBILE */
+/* ================= MOVIL ================= */
 @media(max-width:768px){
-  .controls{ flex-direction:column; }
-  .controls input{ min-width:0;width:100%; }
-  table, thead{ display:none; }
+
+.controls input{
+  width:100%;
+}
+
+table, thead{
+  display:none;
+}
+
+.mobile-list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.mobile-card{
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
+.mobile-actions{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+
+.footer-btns{
+  flex-direction:column;
+}
 }
 </style>
 </head>
@@ -117,179 +178,232 @@ input,select{
 <body>
 
 <div class="container">
-<div class="card">
+  <div class="card">
 
-<!-- CONTROLES -->
-<div class="controls">
-  <button class="btn-load" onclick="cargarUsuarios()">Cargar usuarios</button>
-  <input id="busqueda" placeholder="Buscar usuario / rol" oninput="filtrarUsuarios()">
-  <button class="btn-success" onclick="abrirCrearUsuario()">+ Usuario</button>
-  <button class="btn-secondary" onclick="abrirModulos()">⚙️ Módulos</button>
+    <div class="controls">
+      <button id="btnLoad" class="btn-load" onclick="cargarUsuarios()">Cargar usuarios</button>
+      <input id="busqueda" placeholder="Buscar usuario, nombre o rol" oninput="filtrar()">
+      <button class="btn-success" onclick="abrirCrear()">+ Usuario</button>
+      <button class="btn-success" onclick="abrirModulos()">⚙️ Módulos</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Contraseña</th>
+          <th>Nombre</th>
+          <th>Rol</th>
+          <th>Activo</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tablaUsuarios">
+        <tr><td colspan="6">Presione “Cargar usuarios”</td></tr>
+      </tbody>
+    </table>
+
+    <div id="mobileList" class="mobile-list"></div>
+
+  </div>
 </div>
 
-<!-- USUARIOS -->
-<table>
-<thead>
-<tr>
-  <th>Usuario</th>
-  <th>Contraseña</th>
-  <th>Nombre</th>
-  <th>Rol</th>
-  <th>Activo</th>
-  <th>Acciones</th>
-</tr>
-</thead>
-<tbody id="tablaUsuarios">
-<tr><td colspan="6">Presione “Cargar usuarios”</td></tr>
-</tbody>
-</table>
-
-</div>
-</div>
-
-<!-- MODAL USUARIO -->
+<!-- ================= MODAL USUARIO ================= -->
 <div class="modal" id="modalUsuario">
-<div class="modal-content">
-<h3 id="tituloUsuario"></h3>
+  <div class="modal-content">
+    <h3 id="tituloUsuario"></h3>
 
-<input id="u_user" placeholder="Usuario">
-<input id="u_pass" placeholder="Contraseña">
-<input id="u_nombre" placeholder="Nombre">
+    <input id="u_user" placeholder="Usuario">
+    <input id="u_pass" placeholder="Contraseña">
+    <input id="u_nombre" placeholder="Nombre">
 
-<select id="u_rol">
-  <option>ADMIN</option>
-  <option>OPERADOR</option>
-  <option>SUPERVISOR</option>
-</select>
+    <select id="u_rol">
+      <option>ADMIN</option>
+      <option>OPERADOR</option>
+      <option>SUPERVISOR</option>
+    </select>
 
-<select id="u_activo">
-  <option value="SI">ACTIVO</option>
-  <option value="NO">INACTIVO</option>
-</select>
+    <select id="u_activo">
+      <option value="SI">ACTIVO</option>
+      <option value="NO">INACTIVO</option>
+    </select>
 
-<h4>Permisos</h4>
-<div id="listaPermisos"></div>
+    <h4>Permisos</h4>
+    <div class="permissions" id="listaPermisos"></div>
 
-<div class="footer-btns">
-  <button class="btn-success" onclick="guardarUsuario()">Guardar</button>
-  <button class="btn-danger" onclick="cerrarUsuario()">Cancelar</button>
+    <div class="footer-btns">
+      <button class="btn-success" onclick="guardarUsuario()">Guardar</button>
+      <button class="btn-danger" onclick="cerrarUsuario()">Cancelar</button>
+    </div>
+  </div>
 </div>
-</div>
-</div>
 
-<!-- MODAL MODULOS -->
+<!-- ================= MODAL MODULOS ================= -->
 <div class="modal" id="modalModulos">
-<div class="modal-content">
-<h3>Administrar Módulos</h3>
+  <div class="modal-content">
+    <h3>Crear Módulo</h3>
 
-<input id="m_nombre" placeholder="Nombre del módulo">
-<input id="m_archivo" placeholder="Archivo HTML (ej: index2.html)">
-<input id="m_icono" placeholder="Icono (📦)">
-<input id="m_permiso" placeholder="Permiso (ej: inventario)">
+    <input id="m_nombre" placeholder="Nombre">
+    <input id="m_archivo" placeholder="Archivo HTML">
+    <input id="m_icono" placeholder="Icono">
+    <input id="m_permiso" placeholder="Permiso">
 
-<select id="m_activo">
-  <option value="SI">ACTIVO</option>
-  <option value="NO">INACTIVO</option>
-</select>
+    <select id="m_activo">
+      <option value="SI">ACTIVO</option>
+      <option value="NO">INACTIVO</option>
+    </select>
 
-<div class="footer-btns">
-  <button class="btn-success" onclick="crearModulo()">Guardar módulo</button>
-  <button class="btn-danger" onclick="cerrarModulos()">Cerrar</button>
-</div>
-
-<hr>
-<h4>Módulos existentes</h4>
-<div id="listaModulos"></div>
-
-</div>
+    <div class="footer-btns">
+      <button class="btn-success" onclick="crearModulo()">Guardar</button>
+      <button class="btn-danger" onclick="cerrarModulos()">Cerrar</button>
+    </div>
+  </div>
 </div>
 
 <script>
-const API="https://script.google.com/macros/s/AKfycbzhpjRngwZW2z4d49pUuHtEci23KFxZkETu-SvB5OPPDJpXnqOkc_MchNE-nWYPfAzw/exec";
-let usuarios=[];
+const API = "PEGA_AQUI_TU_URL";
+let usuarios = [];
+let modulos = [];
+let modo = "crear";
 
-/* ========== USUARIOS ========== */
+/* ================= CARGAR ================= */
 async function cargarUsuarios(){
- const r=await fetch(API+"?action=listarUsuarios");
- const d=await r.json();
- usuarios=d.data||[];
- renderUsuarios(usuarios);
+  const r = await fetch(API+"?action=listarUsuarios");
+  const d = await r.json();
+  usuarios = d.data || [];
+  renderUsuarios(usuarios);
 }
 
+/* ================= RENDER ================= */
 function renderUsuarios(data){
- tablaUsuarios.innerHTML="";
- data.forEach(u=>{
-  tablaUsuarios.innerHTML+=`
-  <tr>
-    <td>${u[1]}</td>
-    <td>${u[2]}</td>
-    <td>${u[3]}</td>
-    <td>${u[4]}</td>
-    <td>${u[5]}</td>
-    <td>
-      <button class="btn-edit" onclick="editarUsuario('${u[1]}','${u[2]}','${u[3]}','${u[4]}','${u[5]}','${u[10]||""}')">Editar</button>
-      <button class="btn-danger" onclick="eliminarUsuario('${u[1]}')">Eliminar</button>
-    </td>
-  </tr>`;
- });
+  tablaUsuarios.innerHTML="";
+  mobileList.innerHTML="";
+
+  data.forEach(u=>{
+    tablaUsuarios.innerHTML+=`
+    <tr>
+      <td>${u[1]}</td>
+      <td>${u[2]}</td>
+      <td>${u[3]}</td>
+      <td>${u[4]}</td>
+      <td>${u[5]}</td>
+      <td>
+        <button class="btn-edit" onclick="editarUsuario('${u[1]}','${u[2]}','${u[3]}','${u[4]}','${u[5]}','${u[10]}')">Editar</button>
+        <button class="btn-danger" onclick="eliminarUsuario('${u[1]}')">Eliminar</button>
+      </td>
+    </tr>`;
+
+    mobileList.innerHTML+=`
+    <div class="mobile-card">
+      <b>${u[1]}</b>
+      <p>Contraseña: ${u[2]}</p>
+      <p>${u[3]} - ${u[4]}</p>
+      <div class="mobile-actions">
+        <button class="btn-edit" onclick="editarUsuario('${u[1]}','${u[2]}','${u[3]}','${u[4]}','${u[5]}','${u[10]}')">Editar</button>
+        <button class="btn-danger" onclick="eliminarUsuario('${u[1]}')">Eliminar</button>
+      </div>
+    </div>`;
+  });
 }
 
-function filtrarUsuarios(){
- const q=busqueda.value.toLowerCase();
- renderUsuarios(usuarios.filter(u=>
-  u[1].toLowerCase().includes(q) ||
-  u[3].toLowerCase().includes(q) ||
-  u[4].toLowerCase().includes(q)
- ));
+/* ================= FILTRO ================= */
+function filtrar(){
+  const q = busqueda.value.toLowerCase();
+  renderUsuarios(usuarios.filter(u =>
+    u[1].toLowerCase().includes(q) ||
+    u[3].toLowerCase().includes(q) ||
+    u[4].toLowerCase().includes(q)
+  ));
 }
 
-/* ========== MODULOS ========== */
-function abrirModulos(){
- modalModulos.style.display="flex";
- cargarModulos();
+/* ================= MODALES ================= */
+function abrirCrear(){
+  modo="crear";
+  tituloUsuario.innerText="Crear Usuario";
+  u_user.disabled=false;
+  limpiarUsuario();
+  cargarPermisos();
+  modalUsuario.style.display="flex";
 }
 
-function cerrarModulos(){
- modalModulos.style.display="none";
+function editarUsuario(u,p,n,r,a,perms){
+  modo="editar";
+  tituloUsuario.innerText="Editar Usuario";
+  u_user.value=u; u_user.disabled=true;
+  u_pass.value=p;
+  u_nombre.value=n;
+  u_rol.value=r;
+  u_activo.value=a;
+  cargarPermisos(perms);
+  modalUsuario.style.display="flex";
 }
 
-async function cargarModulos(){
- const r=await fetch(API+"?action=listarModulos");
- const d=await r.json();
- listaModulos.innerHTML="";
- listaPermisos.innerHTML="";
- (d.data||[]).forEach(m=>{
-  listaModulos.innerHTML+=`<div>• ${m[3]} ${m[1]} (${m[5]})</div>`;
-  listaPermisos.innerHTML+=`
-   <label>
-    <input type="checkbox" value="${m[4]}"> ${m[1]}
-   </label>`;
- });
+function cerrarUsuario(){ modalUsuario.style.display="none"; }
+function abrirModulos(){ modalModulos.style.display="flex"; }
+function cerrarModulos(){ modalModulos.style.display="none"; }
+
+/* ================= PERMISOS ================= */
+async function cargarPermisos(selected=""){
+  const r = await fetch(API+"?action=listarModulos");
+  const d = await r.json();
+  modulos = d.data || [];
+  listaPermisos.innerHTML="";
+  modulos.forEach(m=>{
+    listaPermisos.innerHTML+=`
+    <label>
+      <input type="checkbox" value="${m[4]}" ${selected.includes(m[4])?"checked":""}>
+      ${m[1]}
+    </label>`;
+  });
+}
+
+/* ================= CRUD ================= */
+async function guardarUsuario(){
+  const perms=[...document.querySelectorAll("#listaPermisos input:checked")]
+    .map(c=>c.value).join(",");
+
+  await fetch(API,{
+    method:"POST",
+    headers:{ "Content-Type":"text/plain" },
+    body:JSON.stringify({
+      action: modo==="crear"?"crearUsuario":"editarUsuario",
+      username:u_user.value,
+      password:u_pass.value,
+      nombre:u_nombre.value,
+      rol:u_rol.value,
+      activo:u_activo.value,
+      permisos:perms
+    })
+  });
+
+  cerrarUsuario();
+  cargarUsuarios();
+}
+
+async function eliminarUsuario(u){
+  if(!confirm("Eliminar "+u+"?")) return;
+  await fetch(API,{
+    method:"POST",
+    headers:{ "Content-Type":"text/plain" },
+    body:JSON.stringify({action:"eliminarUsuario",username:u})
+  });
+  cargarUsuarios();
 }
 
 async function crearModulo(){
- await fetch(API,{
-  method:"POST",
-  headers:{ "Content-Type":"text/plain" },
-  body:JSON.stringify({
-    action:"crearModulo",
-    nombre:m_nombre.value,
-    archivo:m_archivo.value,
-    icono:m_icono.value,
-    permiso:m_permiso.value,
-    activo:m_activo.value
-  })
- });
- cargarModulos();
-}
-
-/* ========== USUARIO MODAL ========== */
-function abrirCrearUsuario(){
- modalUsuario.style.display="flex";
-}
-
-function cerrarUsuario(){
- modalUsuario.style.display="none";
+  await fetch(API,{
+    method:"POST",
+    headers:{ "Content-Type":"text/plain" },
+    body:JSON.stringify({
+      action:"crearModulo",
+      nombre:m_nombre.value,
+      archivo:m_archivo.value,
+      icono:m_icono.value,
+      permiso:m_permiso.value,
+      activo:m_activo.value
+    })
+  });
+  cerrarModulos();
 }
 </script>
 
